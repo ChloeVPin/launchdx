@@ -2,6 +2,16 @@
 
 All notable changes to launchdx are documented here.
 
+## 0.1.1
+
+### Added
+
+1. Bash completion script in `completions/launchdx.bash`
+2. Zsh completion script in `completions/_launchdx`
+3. Fish completion script in `completions/launchdx.fish`
+4. Man page in `man/launchdx.1`
+5. Homebrew formula installs completions and the man page
+
 ## 0.1.0
 
 ### Added

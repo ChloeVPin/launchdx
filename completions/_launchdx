@@ -1,0 +1,32 @@
+#compdef launchdx
+# zsh completion for launchdx
+
+_launchdx() {
+    local -a commands
+    commands=(
+        'diagnose:inspect an application bundle and explain the evidence behind a launch blocker'
+        'evidence:show raw evidence for an application bundle'
+    )
+
+    if (( CURRENT == 2 )); then
+        _describe -t commands 'launchdx command' commands
+        return
+    fi
+
+    case "${words[2]}" in
+        diagnose | evidence)
+            _arguments \
+                '*:application bundle:_files -g "*.app(-.)"' \
+                '--json[emit a machine readable JSON report]' \
+                '--verbose[include suggested repair actions]' \
+                '--no-color[disable colored output]' \
+                '--help[show help]' \
+                '-h[show help]'
+            ;;
+        *)
+            _message 'unknown launchdx command'
+            ;;
+    esac
+}
+
+_launchdx "$@"

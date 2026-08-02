@@ -46,7 +46,17 @@ brew install launchdx
 launchdx diagnose /Applications/Notion.app
 ```
 
-The formula builds the current release from source with the system Swift toolchain and requires macOS 13 or newer.
+The formula builds the current release from source with the system Swift toolchain and requires macOS 13 or newer. It also installs shell completions and the man page.
+
+For manual completion setup from the repository:
+
+```bash
+source completions/launchdx.bash        # bash
+source completions/_launchdx             # zsh
+source completions/launchdx.fish         # fish
+```
+
+The man page is available as `man/launchdx.1` in the repository or through `man launchdx` after Homebrew installation.
 
 ### From source
 

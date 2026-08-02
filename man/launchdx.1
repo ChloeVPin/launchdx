@@ -1,0 +1,104 @@
+.TH LAUNCHDX 1 "August 2, 2026" "launchdx 0.1.1" "User Commands"
+.SH NAME
+launchdx \- find out exactly why macOS blocked your app
+.SH SYNOPSIS
+.B launchdx
+.I command
+.RI [ options ]
+.I target
+.SH DESCRIPTION
+.B launchdx
+is a read only diagnostic CLI for modern Apple Silicon macOS systems. It
+inspects an application bundle, collects evidence from public Apple APIs and
+Apple provided tools, and explains the most likely launch blocker.
+.PP
+launchdx does not modify the inspected application. It does not remove
+quarantine attributes, change Gatekeeper settings, modify TCC databases,
+disable system protections, re sign applications, or install certificates.
+.SH COMMANDS
+.TP
+.B diagnose
+Inspect an application bundle and produce a diagnosis with findings, evidence,
+and suggested repairs.
+.TP
+.B evidence
+Inspect an application bundle and show the raw evidence without the diagnosis
+summary.
+.SH OPTIONS
+.TP
+.B \-\-json
+Emit a machine readable JSON report.
+.TP
+.B \-\-verbose
+Include suggested repair actions in the text output.
+.TP
+.B \-\-no-color
+Disable colored output.
+.TP
+.B \-h, \-\-help
+Show usage information.
+.SH EXIT STATUS
+.TP
+.B 0
+Inspection completed without a confirmed launch blocker.
+.TP
+.B 1
+A confirmed launch blocker was found.
+.TP
+.B 64
+Command usage error.
+.TP
+.B 65
+Target type is outside the supported .app scope.
+.TP
+.B 66
+Target path does not exist.
+.TP
+.B 69
+Required security evidence is unavailable.
+.TP
+.B 70
+Internal tool error.
+.TP
+.B 77
+Inspection is limited by permissions.
+.TP
+.B 78
+Configuration error.
+.SH EXAMPLES
+Diagnose an application:
+.PP
+.RS
+.nf
+launchdx diagnose /Applications/MyApp.app
+.fi
+.RE
+.PP
+Emit a JSON report:
+.PP
+.RS
+.nf
+launchdx diagnose /Applications/MyApp.app --json
+.fi
+.RE
+.PP
+Show raw evidence:
+.PP
+.RS
+.nf
+launchdx evidence /Applications/MyApp.app
+.fi
+.RE
+.SH SUPPORTED PLATFORM
+Modern Apple Silicon macOS, macOS 13 or newer. Application bundles with the
+\&.app extension are supported. Disk images, installer packages, and archives
+are outside the current scope.
+.SH SEE ALSO
+.BR codesign (1),
+.BR spctl (8),
+.BR stapler (1),
+.BR xattr (1)
+.SH AUTHOR
+launchdx contributors
+.SH LICENSE
+MIT
