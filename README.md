@@ -38,6 +38,18 @@ The default behavior is read only.
 
 ## Quick start
 
+### Homebrew
+
+```bash
+brew tap ChloeVPin/launchdx
+brew install launchdx
+launchdx diagnose /Applications/Notion.app
+```
+
+The formula builds the current release from source with the system Swift toolchain and requires macOS 13 or newer.
+
+### From source
+
 ```bash
 swift build -c release
 .build/release/launchdx diagnose /Applications/Notion.app
