@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  source-validation:
+    name: Source and real macOS validation
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: swift test
+      - name: Release build
+        run: swift build -c release
+      - name: Validate schema and emitted fixture reports
+        shell: bash
+        run: |
+          python3 -m json.tool Schemas/diagnosis-v1.json >/dev/null
+          sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures >/dev/null
+          set +e
+          .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json >/tmp/launchdx-valid.json
+          status=$?
+          set -e
+          test "$status" -eq 1
+          python3 Scripts/validate-report.py /tmp/launchdx-valid.json
+      - name: Real macOS integration fixtures
+        run: sh Scripts/integration-macos.sh /tmp/launchdx-real-integration
+
+  signed-release:
+    name: Developer ID signed and notarized release
+    needs: source-validation
+    if: ${{ vars.RELEASE_CREDENTIALS_CONFIGURED == 'true' }}
+    runs-on: macos-14
+    env:
+      APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      DEVELOPER_ID_APPLICATION: ${{ vars.DEVELOPER_ID_APPLICATION }}
+      RELEASE_CREDENTIALS_CONFIGURED: ${{ vars.RELEASE_CREDENTIALS_CONFIGURED }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify signing credentials are complete
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in APPLE_CERTIFICATE_P12_BASE64 APPLE_CERTIFICATE_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER_ID APPLE_API_KEY_CONTENT KEYCHAIN_PASSWORD DEVELOPER_ID_APPLICATION; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "missing required release credential: $name" >&2
+              exit 78
+            fi
+          done
+      - name: Build signed and notarized artifacts
+        run: sh Scripts/release-signed.sh "$RUNNER_TEMP/release-artifacts"
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: launchdx-release-${{ github.ref_name }}
+          path: ${{ runner.temp }}/release-artifacts/*
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/release-artifacts/*
+
+  credential-not-configured:
+    name: Explain skipped notarization
+    needs: source-validation
+    if: ${{ vars.RELEASE_CREDENTIALS_CONFIGURED != 'true' }}
+    runs-on: macos-14
+    steps:
+      - name: Credential gate
+        run: |
+          echo "Source and real macOS validation passed."
+          echo "Developer ID signing and notarization were not run because release credentials are not configured."
+          echo "Configure the documented repository secrets and DEVELOPER_ID_APPLICATION variable before publishing a signed release."

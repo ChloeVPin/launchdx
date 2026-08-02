@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://launchdx.dev/schema/diagnosis/v1",
+  "title": "launchdx diagnosis report",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "toolVersion",
+    "target",
+    "environment",
+    "inspectionStatus",
+    "launchStatus",
+    "findings",
+    "diagnosis",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "toolVersion": { "type": "string" },
+    "target": { "$ref": "#/$defs/target" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "inspectionStatus": { "enum": ["complete", "target_missing", "invalid_target", "permission_limited", "security_unavailable"] },
+    "launchStatus": { "enum": ["clean", "blocked", "inconclusive"] },
+    "bundle": { "$ref": "#/$defs/bundle" },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "diagnosis": { "$ref": "#/$defs/diagnosis" },
+    "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": ["inputPath", "kind", "exists", "isDirectory", "isReadable"],
+      "properties": {
+        "inputPath": { "type": "string" },
+        "resolvedPath": { "type": ["string", "null"] },
+        "kind": { "type": "string" },
+        "exists": { "type": "boolean" },
+        "isDirectory": { "type": "boolean" },
+        "isReadable": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["operatingSystem", "hostArchitecture", "appleSilicon"],
+      "properties": {
+        "operatingSystem": { "type": "string" },
+        "hostArchitecture": { "type": "string" },
+        "appleSilicon": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "bundle": {
+      "type": ["object", "null"],
+      "required": ["bundlePath", "infoPlistPath", "infoPlistReadable", "infoPlistValid", "executableExists", "executableIsRegularFile", "executableReadable"],
+      "properties": {
+        "bundlePath": { "type": "string" },
+        "infoPlistPath": { "type": "string" },
+        "infoPlistReadable": { "type": "boolean" },
+        "infoPlistValid": { "type": "boolean" },
+        "bundleIdentifier": { "type": ["string", "null"] },
+        "executableName": { "type": ["string", "null"] },
+        "executablePath": { "type": ["string", "null"] },
+        "executableExists": { "type": "boolean" },
+        "executableIsRegularFile": { "type": "boolean" },
+        "executableReadable": { "type": "boolean" },
+        "macho": { "$ref": "#/$defs/macho" },
+        "security": { "$ref": "#/$defs/security" }
+      },
+      "additionalProperties": false
+    },
+    "macho": {
+      "type": ["object", "null"],
+      "required": ["path", "format", "isReadable", "isMachO", "isMalformed", "architectures", "supportsArm64", "supportsX86_64", "hasCodeSignatureLoadCommand", "codeSignatureRangeValid", "slices"],
+      "properties": {
+        "path": { "type": "string" },
+        "format": { "enum": ["thin", "universal", "unknown"] },
+        "isReadable": { "type": "boolean" },
+        "isMachO": { "type": "boolean" },
+        "isMalformed": { "type": "boolean" },
+        "architectures": { "type": "array", "items": { "type": "string" } },
+        "supportsArm64": { "type": "boolean" },
+        "supportsX86_64": { "type": "boolean" },
+        "minimumOSVersion": { "type": ["string", "null"] },
+        "sdkVersion": { "type": ["string", "null"] },
+        "hasCodeSignatureLoadCommand": { "type": "boolean" },
+        "codeSignatureRangeValid": { "type": "boolean" },
+        "slices": { "type": "array", "items": { "$ref": "#/$defs/machoSlice" } },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "machoSlice": {
+      "type": "object",
+      "required": ["architecture", "cpuType", "is64Bit", "hasCodeSignatureLoadCommand", "codeSignatureRangeValid", "isMalformed"],
+      "properties": {
+        "architecture": { "type": "string" },
+        "cpuType": { "type": "integer", "minimum": 0 },
+        "is64Bit": { "type": ["boolean", "null"] },
+        "minimumOSVersion": { "type": ["string", "null"] },
+        "sdkVersion": { "type": ["string", "null"] },
+        "hasCodeSignatureLoadCommand": { "type": "boolean" },
+        "codeSignatureRangeValid": { "type": "boolean" },
+        "isMalformed": { "type": "boolean" },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": ["object", "null"],
+      "required": ["signature", "notarization", "gatekeeper", "quarantine"],
+      "properties": {
+        "signature": { "$ref": "#/$defs/signature" },
+        "notarization": { "$ref": "#/$defs/notarization" },
+        "gatekeeper": { "$ref": "#/$defs/gatekeeper" },
+        "quarantine": { "$ref": "#/$defs/quarantine" }
+      },
+      "additionalProperties": false
+    },
+    "signature": {
+      "type": "object",
+      "required": ["state", "entitlements", "nested"],
+      "properties": {
+        "state": { "type": "string" },
+        "identity": { "type": ["string", "null"] },
+        "teamID": { "type": ["string", "null"] },
+        "identifier": { "type": ["string", "null"] },
+        "hardenedRuntime": { "type": ["boolean", "null"] },
+        "entitlements": { "type": "object", "additionalProperties": {} },
+        "nested": { "$ref": "#/$defs/nested" },
+        "apiValidation": { "type": ["string", "null"] },
+        "rawVerification": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "nested": {
+      "type": "object",
+      "required": ["pathsChecked", "invalidPaths", "unsignedPaths", "unavailablePaths", "teamIDs", "mismatchedTeamIDPaths"],
+      "properties": {
+        "pathsChecked": { "type": "array", "items": { "type": "string" } },
+        "invalidPaths": { "type": "array", "items": { "type": "string" } },
+        "unsignedPaths": { "type": "array", "items": { "type": "string" } },
+        "unavailablePaths": { "type": "array", "items": { "type": "string" } },
+        "teamIDs": { "type": "array", "items": { "type": "string" } },
+        "mismatchedTeamIDPaths": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "notarization": {
+      "type": "object",
+      "required": ["staple"],
+      "properties": { "staple": { "type": "string" }, "detail": { "type": ["string", "null"] } },
+      "additionalProperties": false
+    },
+    "gatekeeper": {
+      "type": "object",
+      "required": ["result"],
+      "properties": { "result": { "type": "string" }, "detail": { "type": ["string", "null"] } },
+      "additionalProperties": false
+    },
+    "quarantine": {
+      "type": "object",
+      "required": ["present"],
+      "properties": {
+        "present": { "type": "boolean" },
+        "flags": { "type": ["integer", "null"] },
+        "timestamp": { "type": ["number", "null"] },
+        "agent": { "type": ["string", "null"] },
+        "eventIdentifier": { "type": ["string", "null"] },
+        "rawValue": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["id", "kind", "source", "detail", "observed"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "source": { "type": "string" },
+        "detail": { "type": "string" },
+        "observed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["id", "title", "detail", "safeToAutomate"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "detail": { "type": "string" },
+        "safeToAutomate": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id", "status", "severity", "confidence", "title", "explanation", "evidenceReferences", "suggestedActions"],
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "enum": ["passed", "failed", "warning", "skipped", "unavailable", "inconclusive"] },
+        "severity": { "enum": ["blocker", "error", "warning", "information"] },
+        "confidence": { "enum": ["confirmed", "high", "medium", "low"] },
+        "title": { "type": "string" },
+        "explanation": { "type": "string" },
+        "evidenceReferences": { "type": "array", "items": { "type": "string" } },
+        "suggestedActions": { "type": "array", "items": { "$ref": "#/$defs/action" } }
+      },
+      "additionalProperties": false
+    },
+    "diagnosis": {
+      "type": "object",
+      "required": ["classification", "triggerFindingIDs", "summary", "confidence", "limitations"],
+      "properties": {
+        "classification": { "type": "string" },
+        "primaryFindingID": { "type": ["string", "null"] },
+        "triggerFindingIDs": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "string" },
+        "confidence": { "type": "string" },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
