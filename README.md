@@ -2,6 +2,12 @@
   <h1>launchdx</h1>
 
   <p>Find the evidence behind a macOS launch failure.</p>
+
+  <p>
+    <a href="https://github.com/ChloeVPin/launchdx/actions/workflows/macos.yml"><img src="https://github.com/ChloeVPin/launchdx/actions/workflows/macos.yml/badge.svg" alt="CI" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT license" /></a>
+    <a href="https://github.com/ChloeVPin/launchdx/releases/latest"><img src="https://img.shields.io/github/v/release/ChloeVPin/launchdx?label=latest%20release" alt="Latest release" /></a>
+  </p>
 </div>
 
 `launchdx` inspects a macOS application bundle and explains the strongest evidence behind a launch blocker.
