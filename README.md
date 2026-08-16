@@ -1,6 +1,8 @@
-# launchdx
+<div align="center">
+  <h1>launchdx</h1>
 
-## Find the evidence behind a macOS launch failure
+  <p>Find the evidence behind a macOS launch failure.</p>
+</div>
 
 `launchdx` inspects a macOS application bundle and explains the strongest evidence behind a launch blocker.
 
