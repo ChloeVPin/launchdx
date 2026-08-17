@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="assets/readme-icon.svg" alt="launchdx" width="120" />
+
   <h1>launchdx</h1>
 
   <p>Find the evidence behind a macOS launch failure.</p>
