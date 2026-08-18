@@ -2,6 +2,13 @@
 
 All notable changes to launchdx are documented here.
 
+## 0.2.1
+
+### Added
+
+1. GitHub Action that runs `launchdx diagnose` on a `.app`, `.dmg`, or `.pkg` and fails the job on a confirmed blocker
+2. `ChloeVPin/launchdx-action@v1` wrapper for the one-line CI snippet
+
 ## 0.2.0
 
 ### Added

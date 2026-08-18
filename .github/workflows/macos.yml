@@ -64,3 +64,37 @@ jobs:
           assert 'container.app-found' in ids
           assert any(item in ('signature.unsigned', 'signature.invalid') for item in ids)
           PY
+      - name: Action wrapper tests
+        run: sh Scripts/test-action.sh
+      - name: Action on unsigned fixture (expect blocker)
+        id: blocked
+        continue-on-error: true
+        uses: ./
+        with:
+          path: /tmp/launchdx-fixtures/Valid.app
+          binary: ${{ github.workspace }}/.build/release/launchdx
+          report-path: /tmp/launchdx-action-valid.json
+          fail-on-blocker: true
+      - name: Assert action failed on blocker
+        run: |
+          test "${{ steps.blocked.outcome }}" = "failure"
+          test "${{ steps.blocked.outputs.exit-code }}" = "1"
+          test "${{ steps.blocked.outputs.launch-status }}" = "blocked"
+          python3 - <<'PY'
+          import json
+          report = json.load(open("/tmp/launchdx-action-valid.json"))
+          assert report["launchStatus"] == "blocked"
+          assert any(item["id"] in ("signature.unsigned", "signature.invalid") for item in report["findings"])
+          PY
+      - name: Action records blocker without failing the job
+        id: recorded
+        uses: ./
+        with:
+          path: /tmp/launchdx-fixtures/Valid.app
+          binary: ${{ github.workspace }}/.build/release/launchdx
+          report-path: /tmp/launchdx-action-valid-nofail.json
+          fail-on-blocker: false
+      - name: Assert action output without job failure
+        run: |
+          test "${{ steps.recorded.outputs.exit-code }}" = "1"
+          test "${{ steps.recorded.outputs.launch-status }}" = "blocked"

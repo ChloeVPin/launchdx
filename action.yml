@@ -1,0 +1,57 @@
+name: launchdx
+description: Diagnose why macOS would block an app, disk image, or installer package
+author: ChloeVPin
+branding:
+  icon: search
+  color: purple
+
+inputs:
+  path:
+    description: Path to a .app bundle, .dmg, or .pkg
+    required: true
+  binary:
+    description: Path to a launchdx executable. When empty, use PATH or install from Homebrew.
+    required: false
+    default: ""
+  json:
+    description: Write a machine-readable JSON report
+    required: false
+    default: "true"
+  report-path:
+    description: File to write the report to
+    required: false
+    default: launchdx-report.json
+  fail-on-blocker:
+    description: Fail the job when launchdx finds a confirmed launch blocker
+    required: false
+    default: "true"
+  fail-on-error:
+    description: Fail the job on usage, missing-target, or tool errors
+    required: false
+    default: "true"
+
+outputs:
+  exit-code:
+    description: launchdx process exit code
+    value: ${{ steps.diagnose.outputs.exit-code }}
+  launch-status:
+    description: clean, blocked, or inconclusive when the report is JSON
+    value: ${{ steps.diagnose.outputs.launch-status }}
+  report-path:
+    description: Path to the written report
+    value: ${{ steps.diagnose.outputs.report-path }}
+
+runs:
+  using: composite
+  steps:
+    - id: diagnose
+      shell: bash
+      env:
+        LAUNCHDX_PATH: ${{ inputs.path }}
+        LAUNCHDX_BIN: ${{ inputs.binary }}
+        LAUNCHDX_JSON: ${{ inputs.json }}
+        LAUNCHDX_REPORT_PATH: ${{ inputs.report-path }}
+        LAUNCHDX_FAIL_ON_BLOCKER: ${{ inputs.fail-on-blocker }}
+        LAUNCHDX_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
+        LAUNCHDX_INSTALL: "true"
+      run: bash "${{ github.action_path }}/action/diagnose.sh"

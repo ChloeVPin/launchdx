@@ -17,6 +17,7 @@ Run:
 swift test
 swift build -c release
 python3 -m json.tool Schemas/diagnosis-v1.json >/dev/null
+sh Scripts/test-action.sh
 ```
 
 Generate and inspect parser fixtures:
