@@ -2,7 +2,7 @@
 
 ## Scope
 
-`launchdx` is a read-only diagnostic tool for application bundles on modern Apple Silicon macOS systems.
+`launchdx` is a read-only diagnostic tool for application bundles and their download containers (`.dmg`, `.pkg`) on modern Apple Silicon macOS systems.
 
 The tool must not remove quarantine, change Gatekeeper policy, modify TCC databases, disable system protections, install certificates, re-sign applications, or upload inspected artifacts.
 

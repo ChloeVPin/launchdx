@@ -1,4 +1,4 @@
-.TH LAUNCHDX 1 "August 2, 2026" "launchdx 0.1.1" "User Commands"
+.TH LAUNCHDX 1 "August 17, 2026" "launchdx 0.2.0" "User Commands"
 .SH NAME
 launchdx \- find out exactly why macOS blocked your app
 .SH SYNOPSIS
@@ -9,8 +9,11 @@ launchdx \- find out exactly why macOS blocked your app
 .SH DESCRIPTION
 .B launchdx
 is a read only diagnostic CLI for modern Apple Silicon macOS systems. It
-inspects an application bundle, collects evidence from public Apple APIs and
-Apple provided tools, and explains the most likely launch blocker.
+inspects an application bundle or a download container (.dmg or .pkg),
+collects evidence from public Apple APIs and Apple provided tools, and
+explains the most likely launch blocker. Disk images are mounted read only.
+Installer packages are expanded into a temporary directory. The original
+target is never modified.
 .PP
 launchdx does not modify the inspected application. It does not remove
 quarantine attributes, change Gatekeeper settings, modify TCC databases,
@@ -18,12 +21,12 @@ disable system protections, re sign applications, or install certificates.
 .SH COMMANDS
 .TP
 .B diagnose
-Inspect an application bundle and produce a diagnosis with findings, evidence,
-and suggested repairs.
+Inspect an application bundle, disk image, or installer package and produce a
+diagnosis with findings, evidence, and suggested repairs.
 .TP
 .B evidence
-Inspect an application bundle and show the raw evidence without the diagnosis
-summary.
+Inspect an application bundle, disk image, or installer package and show the
+raw evidence without the diagnosis summary.
 .SH OPTIONS
 .TP
 .B \-\-json
@@ -49,7 +52,7 @@ A confirmed launch blocker was found.
 Command usage error.
 .TP
 .B 65
-Target type is outside the supported .app scope.
+Target type is outside the supported .app, .dmg, and .pkg scope.
 .TP
 .B 66
 Target path does not exist.
@@ -91,8 +94,9 @@ launchdx evidence /Applications/MyApp.app
 .RE
 .SH SUPPORTED PLATFORM
 Modern Apple Silicon macOS, macOS 13 or newer. Application bundles with the
-\&.app extension are supported. Disk images, installer packages, and archives
-are outside the current scope.
+\&.app extension are supported. Disk images (.dmg) and installer packages
+(.pkg) are opened read only so the nested application can be diagnosed.
+ZIP archives remain outside the current scope.
 .SH SEE ALSO
 .BR codesign (1),
 .BR spctl (8),

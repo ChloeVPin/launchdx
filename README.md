@@ -12,7 +12,7 @@
   </p>
 </div>
 
-`launchdx` inspects a macOS application bundle and explains the strongest evidence behind a launch blocker.
+`launchdx` inspects a macOS application bundle, or the `.dmg` / `.pkg` a developer actually downloaded, and explains the strongest evidence behind a launch blocker.
 
 It is designed for modern Apple Silicon Macs and applications distributed outside the Mac App Store.
 
@@ -20,7 +20,9 @@ It is designed for modern Apple Silicon Macs and applications distributed outsid
 
 ## Current release scope
 
-The current release supports `.app` bundles only.
+The current release supports `.app` bundles and the download containers that usually wrap them (`.dmg` and `.pkg`).
+
+A container is mounted or expanded read-only, then the nested `.app` is diagnosed with the same checks. The original image or package is not modified.
 
 It checks the following areas:
 
@@ -42,7 +44,8 @@ It checks the following areas:
 16. Stapled notarization ticket validation
 17. Gatekeeper assessment
 18. `com.apple.quarantine` metadata
-19. Structured findings, evidence references, confidence, and suggested repairs
+19. Read-only `.dmg` mount and `.pkg` expand, then reuse of the nested `.app` diagnosis
+20. Structured findings, evidence references, confidence, and suggested repairs
 
 The default behavior is read only.
 
@@ -54,6 +57,7 @@ The default behavior is read only.
 brew tap ChloeVPin/launchdx
 brew install launchdx
 launchdx diagnose /Applications/Notion.app
+launchdx diagnose ~/Downloads/Notion.dmg
 ```
 
 The formula builds the current release from source with the system Swift toolchain and requires macOS 13 or newer. It also installs shell completions and the man page.
@@ -165,7 +169,7 @@ The schema is versioned independently from terminal wording. Consumers should us
 1. Code `0`: inspection completed without a confirmed blocker
 2. Code `1`: a confirmed blocker was found
 3. Code `64`: command usage error
-4. Code `65`: target type is outside the `.app` MVP
+4. Code `65`: target type is outside the supported `.app`, `.dmg`, and `.pkg` scope
 5. Code `66`: target path does not exist
 6. Code `69`: required security evidence is unavailable
 7. Code `70`: internal tool error
@@ -200,11 +204,9 @@ The following macOS areas are intentionally outside this release:
 2. Sandbox denial analysis
 3. App Translocation reconstruction
 4. Unified log correlation
-5. Disk image inspection
-6. ZIP inspection
-7. Installer package inspection
-8. Automatic fixes
-9. Notarization submission log retrieval
+5. ZIP inspection
+6. Automatic fixes
+7. Notarization submission log retrieval
 
 ## Test the project
 
@@ -221,6 +223,7 @@ Generate disposable parser fixtures:
 rm -rf /tmp/launchdx-fixtures
 sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
 ```
 
 The generated `Valid.app` is intentionally not a runnable application. It contains a minimal arm64 Mach O header and no valid signing identity.
@@ -296,4 +299,4 @@ launchdx is released under the MIT License. See `LICENSE`.
 
 ## Project status
 
-This is a focused first release for `.app` diagnosis on Apple Silicon macOS. It intentionally favors evidence quality and honest uncertainty over claims that it reproduces every internal macOS launch decision.
+This is a focused release for `.app`, `.dmg`, and `.pkg` diagnosis on Apple Silicon macOS. It intentionally favors evidence quality and honest uncertainty over claims that it reproduces every internal macOS launch decision.

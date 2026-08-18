@@ -32,6 +32,7 @@ The script creates and removes only its output directory. It never modifies inst
 2. `Modified.app` is signed, then a sealed resource is changed. Native `codesign` must reject it and launchdx must identify invalid signature evidence.
 3. `NestedUnsigned.app` contains an unsigned nested helper before the host is signed. Native strict signing and launchdx must identify the nested defect.
 4. `Modified.app` receives a quarantine attribute so the report can prove that quarantine is a trigger and not automatically the root cause.
+5. `AdHoc.dmg` wraps `AdHoc.app` so container unpack reuses the nested application diagnosis.
 
 ## What this does not prove
 

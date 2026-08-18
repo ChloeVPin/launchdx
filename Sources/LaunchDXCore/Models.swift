@@ -50,6 +50,8 @@ public enum InspectionStatus: String, Codable {
 
 public enum ArtifactKind: String, Codable {
     case applicationBundle = "application_bundle"
+    case diskImage = "disk_image"
+    case installerPackage = "installer_package"
     case directory
     case file
     case missing
@@ -64,6 +66,7 @@ public enum EvidenceKind: String, Codable {
     case notarization
     case gatekeeper
     case quarantine
+    case container
     case process
     case inference
 }
@@ -470,6 +473,28 @@ public struct SecurityInspection: Codable, Equatable {
     }
 }
 
+public struct ContainerInspection: Codable, Equatable {
+    public let kind: ArtifactKind
+    public let unpackMethod: String
+    public let nestedApplicationPath: String?
+    public let available: Bool
+    public let detail: String?
+
+    public init(
+        kind: ArtifactKind,
+        unpackMethod: String,
+        nestedApplicationPath: String? = nil,
+        available: Bool,
+        detail: String? = nil
+    ) {
+        self.kind = kind
+        self.unpackMethod = unpackMethod
+        self.nestedApplicationPath = nestedApplicationPath
+        self.available = available
+        self.detail = detail
+    }
+}
+
 public struct BundleInspection: Codable, Equatable {
     public let bundlePath: String
     public let infoPlistPath: String
@@ -556,6 +581,7 @@ public struct DiagnosticReport: Codable, Equatable {
     public let inspectionStatus: InspectionStatus
     public let launchStatus: LaunchStatus
     public let bundle: BundleInspection?
+    public let container: ContainerInspection?
     public let findings: [Finding]
     public let diagnosis: Diagnosis
     public let evidence: [Evidence]
@@ -568,6 +594,7 @@ public struct DiagnosticReport: Codable, Equatable {
         inspectionStatus: InspectionStatus,
         launchStatus: LaunchStatus,
         bundle: BundleInspection?,
+        container: ContainerInspection? = nil,
         findings: [Finding],
         diagnosis: Diagnosis,
         evidence: [Evidence]
@@ -579,6 +606,7 @@ public struct DiagnosticReport: Codable, Equatable {
         self.inspectionStatus = inspectionStatus
         self.launchStatus = launchStatus
         self.bundle = bundle
+        self.container = container
         self.findings = findings
         self.diagnosis = diagnosis
         self.evidence = evidence

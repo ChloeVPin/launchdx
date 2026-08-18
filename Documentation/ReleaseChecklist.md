@@ -25,6 +25,7 @@ sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/MissingExecutable.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/BrokenBundle.app --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
 ```
 
 Expected fixture behavior:
@@ -32,6 +33,7 @@ Expected fixture behavior:
 1. `Valid.app`: blocked because the parser fixture is unsigned and not runnable, exit code `1`
 2. `MissingExecutable.app`: blocked by bundle structure, exit code `1`
 3. `BrokenBundle.app`: blocked by invalid `Info.plist`, exit code `1`
+4. `Valid.dmg`: same unsigned blocker after a read-only mount, exit code `1`
 
 ## Real macOS artifact validation
 

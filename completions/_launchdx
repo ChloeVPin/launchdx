@@ -4,8 +4,8 @@
 _launchdx() {
     local -a commands
     commands=(
-        'diagnose:inspect an application bundle and explain the evidence behind a launch blocker'
-        'evidence:show raw evidence for an application bundle'
+        'diagnose:inspect an application, disk image, or installer package and explain the evidence behind a launch blocker'
+        'evidence:show raw evidence for an application, disk image, or installer package'
     )
 
     if (( CURRENT == 2 )); then
@@ -16,7 +16,7 @@ _launchdx() {
     case "${words[2]}" in
         diagnose | evidence)
             _arguments \
-                '*:application bundle:_files -g "*.app(-.)"' \
+                '*:application artifact:_files -g "*.app(-/)" -g "*.dmg" -g "*.pkg"' \
                 '--json[emit a machine readable JSON report]' \
                 '--verbose[include suggested repair actions]' \
                 '--no-color[disable colored output]' \

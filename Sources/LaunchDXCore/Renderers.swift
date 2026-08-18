@@ -35,6 +35,16 @@ public struct ReportRenderer {
         if let resolvedPath = report.target.resolvedPath, resolvedPath != report.target.inputPath {
             lines.append("  Resolved: \(resolvedPath)")
         }
+        lines.append("  Kind: \(report.target.kind.rawValue)")
+        if let container = report.container {
+            lines.append("")
+            lines.append("Container:")
+            lines.append("  Unpack: \(container.unpackMethod)")
+            lines.append("  Nested app: \(container.nestedApplicationPath ?? "not found")")
+            if let detail = container.detail, !detail.isEmpty {
+                lines.append("  Detail: \(detail)")
+            }
+        }
         lines.append("")
         lines.append("Environment:")
         lines.append("  macOS: \(report.environment.operatingSystem)")

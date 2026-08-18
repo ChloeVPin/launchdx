@@ -1,3 +1,20 @@
+# launchdx 0.2.0
+
+## Find out why macOS rejected an application
+
+launchdx is a read only diagnostic CLI for modern Apple Silicon macOS systems. It inspects `.app` bundles and the `.dmg` / `.pkg` files developers actually download, collects evidence from public Apple APIs and Apple provided tools, and explains the most likely launch blocker.
+
+## Added in 0.2.0
+
+1. Read-only `.dmg` mount and nested `.app` diagnosis
+2. Read-only `.pkg` expand and nested `.app` diagnosis
+3. Stable container finding identifiers
+4. Optional `container` object on the JSON report
+
+The 0.1.x `.app` diagnosis path is unchanged except that diagnosis composition is shared with the container path.
+
+---
+
 # launchdx 0.1.0
 
 ## Find out why macOS rejected an application
@@ -69,7 +86,7 @@ The notarized distribution artifact is the DMG. The companion ZIP is a non-notar
 ## Known limitations
 
 1. TCC, sandbox, App Translocation, and unified log correlation are outside this release
-2. DMG, ZIP, and PKG inspection are outside this release
+2. ZIP inspection is outside this release
 3. Notarization submission log retrieval is outside this release
 4. Gatekeeper and Apple policy services can be unavailable or version dependent
 5. Final distribution should be tested on a clean Apple Silicon Mac with the exact downloaded artifact

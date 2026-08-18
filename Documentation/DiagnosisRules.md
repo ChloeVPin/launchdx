@@ -5,7 +5,9 @@ The rule engine is intentionally separate from evidence collection. Checkers pro
 ## Initial catalog
 
 1. A missing target is unavailable evidence, not a launch diagnosis.
-2. A target that is not a `.app` directory is outside the MVP and invalid input.
+2. A target that is not a `.app` directory, `.dmg`, or `.pkg` is outside scope and invalid input.
+2a. A `.dmg` is mounted read-only; a `.pkg` is expanded into a temporary directory. The nested `.app` is then diagnosed with the same rules. The original container is not modified.
+2b. Quarantine on the download container is a trigger (`container.quarantine`), not the root defect.
 3. An unreadable target is permission-limited evidence.
 4. A missing `Contents` directory is a confirmed bundle blocker.
 5. A missing `Contents/Info.plist` is a confirmed bundle blocker.

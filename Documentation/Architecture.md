@@ -16,7 +16,11 @@ The implementation must satisfy five rules:
 
 ### 1. Target inspection
 
-`BundleInspector` resolves the input path, identifies the artifact kind, checks readability, validates the `.app` directory shape, reads `Contents/Info.plist`, resolves `CFBundleExecutable`, and records structural findings.
+`BundleInspector` resolves the input path, identifies the artifact kind, and checks readability.
+
+`.app` directories are inspected in place. `.dmg` and `.pkg` files are handed to `ContainerInspector`, which mounts or expands them read-only, finds a nested `.app`, and then reuses the same application diagnosis. The original container is never written.
+
+For an application bundle it validates the `.app` directory shape, reads `Contents/Info.plist`, resolves `CFBundleExecutable`, and records structural findings.
 
 ### 2. Mach O inspection
 
@@ -100,12 +104,13 @@ The report is composed of:
 
 1. `TargetInspection`
 2. `BundleInspection`
-3. `MachOInspection`
-4. `SecurityInspection`
-5. `Finding`
-6. `Evidence`
-7. `Diagnosis`
-8. `DiagnosticReport`
+3. `ContainerInspection`
+4. `MachOInspection`
+5. `SecurityInspection`
+6. `Finding`
+7. `Evidence`
+8. `Diagnosis`
+9. `DiagnosticReport`
 
 Every finding has a stable identifier, status, severity, confidence, explanation, evidence references, and suggested actions.
 
@@ -145,6 +150,6 @@ The next additions may include:
 1. Unified log correlation
 2. Sandbox and TCC feature failure context
 3. App Translocation evidence
-4. DMG and installer package inspection
+4. ZIP inspection
 
-These are not required for the current `.app` release.
+These are not required for the current `.app` / `.dmg` / `.pkg` release.

@@ -2,6 +2,21 @@
 
 All notable changes to launchdx are documented here.
 
+## 0.2.0
+
+### Added
+
+1. Read-only `.dmg` inspection: the image is mounted without modification, then the nested `.app` is diagnosed
+2. Read-only `.pkg` inspection: the package is expanded into a temporary directory, then the nested `.app` is diagnosed
+3. Container evidence and findings with stable identifiers (`container.mounted`, `container.expanded`, `container.app-found`, `container.no-app`, `container.unavailable`, `container.quarantine`)
+4. Optional `container` object on the versioned JSON report
+5. Diagnosis-path tests for a clean app, an unsigned app, quarantine-as-trigger, and a generated disk image
+
+### Changed
+
+1. CLI usage, man page, and completions accept `.app`, `.dmg`, and `.pkg`
+2. Exit code `65` now means the target is outside `.app` / `.dmg` / `.pkg`, not "not an .app"
+
 ## 0.1.1
 
 ### Added
@@ -34,7 +49,7 @@ All notable changes to launchdx are documented here.
 ### Known limitations
 
 1. TCC, sandbox, App Translocation, and unified log correlation are not implemented
-2. DMG, ZIP, and PKG inspection are not implemented
+2. ZIP inspection is not implemented
 3. Notarization submission logs are not queried
 4. A clean external Mac is still required for final distribution validation
 5. Gatekeeper and Apple policy services may be unavailable or version dependent

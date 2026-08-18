@@ -6,21 +6,25 @@ public final class BundleInspector {
     private let fileManager: FileManager
     private let performSecurityChecks: Bool
     private let securityInspectionProvider: SecurityInspectionProvider
+    private let containerInspector: ContainerInspector
 
     public init(fileManager: FileManager = .default, performSecurityChecks: Bool = true) {
         self.fileManager = fileManager
         self.performSecurityChecks = performSecurityChecks
         self.securityInspectionProvider = BundleInspector.defaultSecurityInspection
+        self.containerInspector = ContainerInspector(fileManager: fileManager)
     }
 
     init(
         fileManager: FileManager = .default,
         performSecurityChecks: Bool = true,
-        securityInspectionProvider: @escaping SecurityInspectionProvider
+        securityInspectionProvider: @escaping SecurityInspectionProvider,
+        containerInspector: ContainerInspector = ContainerInspector()
     ) {
         self.fileManager = fileManager
         self.performSecurityChecks = performSecurityChecks
         self.securityInspectionProvider = securityInspectionProvider
+        self.containerInspector = containerInspector
     }
 
     private static func defaultSecurityInspection(path: String) -> (SecurityInspection, [Evidence], [Finding]) {
@@ -49,11 +53,16 @@ public final class BundleInspector {
         let readable = exists && fileManager.isReadableFile(atPath: inputURL.path)
         let resolvedURL = exists ? inputURL.resolvingSymlinksInPath() : nil
 
+        let extensionName = inputURL.pathExtension.lowercased()
         let kind: ArtifactKind
         if !exists {
             kind = .missing
-        } else if isDirectory && inputURL.pathExtension.lowercased() == "app" {
+        } else if isDirectory && extensionName == "app" {
             kind = .applicationBundle
+        } else if !isDirectory && extensionName == "dmg" {
+            kind = .diskImage
+        } else if !isDirectory && extensionName == "pkg" {
+            kind = .installerPackage
         } else if isDirectory {
             kind = .directory
         } else {
@@ -87,7 +96,7 @@ public final class BundleInspector {
                 suggestedActions: [SuggestedAction(
                     id: "target.check-path",
                     title: "Check the target path",
-                    detail: "Provide the path to an existing .app bundle."
+                    detail: "Provide the path to an existing .app bundle, .dmg, or .pkg."
                 )]
             )
             return DiagnosticReport(
@@ -143,25 +152,29 @@ public final class BundleInspector {
             )
         }
 
+        if kind == .diskImage || kind == .installerPackage {
+            return inspectContainer(at: resolvedURL ?? inputURL, target: target, kind: kind)
+        }
+
         guard kind == .applicationBundle else {
             let evidence = [Evidence(
                 id: "target.not-app",
                 kind: .filesystem,
                 source: inputURL.path,
-                detail: "The target exists, but it is not an application bundle directory with a .app extension."
+                detail: "The target exists, but it is not an application bundle, disk image, or installer package."
             )]
             let finding = Finding(
                 id: "target.not-app",
                 status: .failed,
                 severity: .error,
                 confidence: .confirmed,
-                title: "Target is not an application bundle",
-                explanation: "The MVP accepts .app bundle directories only.",
+                title: "Target is not a supported application artifact",
+                explanation: "launchdx accepts .app bundle directories, .dmg disk images, and .pkg installer packages.",
                 evidenceReferences: ["target.not-app"],
                 suggestedActions: [SuggestedAction(
                     id: "target.choose-app",
-                    title: "Choose an application bundle",
-                    detail: "Pass a path ending in .app that points to a directory."
+                    title: "Choose an application artifact",
+                    detail: "Pass a path ending in .app, .dmg, or .pkg."
                 )]
             )
             return DiagnosticReport(
@@ -173,7 +186,7 @@ public final class BundleInspector {
                 diagnosis: Diagnosis(
                     classification: .unavailableEvidence,
                     primaryFindingID: finding.id,
-                    summary: "The target is outside the .app-only MVP scope.",
+                    summary: "The target is outside the supported .app, .dmg, and .pkg scope.",
                     confidence: .confirmed
                 ),
                 evidence: evidence
@@ -678,62 +691,148 @@ public final class BundleInspector {
             security: securityInspection
         )
 
-        let hasBlocker = findings.contains { $0.severity == .blocker && $0.status == .failed }
-        let primary = findings.first { $0.severity == .blocker && $0.status == .failed } ?? findings.first
-        let signatureBlocker = findings.first { $0.id.hasPrefix("signature.") && $0.severity == .blocker && $0.status == .failed }
-        let gatekeeperRejected = findings.contains { $0.id == "gatekeeper.assessment" && $0.status == .failed }
-        let quarantinePresent = findings.contains { $0.id == "quarantine.present" }
-        let triggerIDs = quarantinePresent ? ["quarantine.present"] : []
-        let securityUnavailable = securityInspection.map {
-            $0.signature.state == .unavailable ||
-            $0.signature.state == .inconclusive ||
-            $0.notarization.staple == .unavailable ||
-            $0.gatekeeper.result == .unavailable ||
-            findings.contains { $0.id == "quarantine.unavailable" || $0.id == "signature.nested-unavailable" }
-        } ?? false
-        let completeSecurityInspection = securityInspection != nil && !securityUnavailable && !findings.contains { finding in
-            finding.status == .inconclusive &&
-            (finding.id.hasPrefix("quarantine.") || finding.id.hasPrefix("gatekeeper.") || finding.id.hasPrefix("notarization."))
-        }
-        let summary: String
-        if let signatureBlocker, gatekeeperRejected, quarantinePresent {
-            summary = "Gatekeeper rejected the quarantined app, and the primary cause is the invalid or missing code signature: \(signatureBlocker.explanation) Quarantine triggered the assessment; it is not itself the defect."
-        } else if hasBlocker, let primary {
-            summary = primary.explanation
-        } else if completeSecurityInspection {
-            summary = "No confirmed launch blocker was found."
-        } else if let primary {
-            summary = primary.explanation
-        } else {
-            summary = "No confirmed blocker was found, but the full launch diagnosis is incomplete."
-        }
-        let limitations: [String] = {
-            #if os(macOS)
-            return ["Nested code is scanned from common bundle locations; unified logs, TCC, sandbox, and App Translocation are not inspected yet."]
-            #else
-            return ["Apple security checks require macOS and were not available in this build."]
-            #endif
-        }()
-        let diagnosis = Diagnosis(
-            classification: hasBlocker ? .confirmedBlocker : completeSecurityInspection ? .clean : .inconclusive,
-            primaryFindingID: signatureBlocker?.id ?? primary?.id,
-            triggerFindingIDs: triggerIDs,
-            summary: summary,
-            confidence: hasBlocker ? .confirmed : .high,
-            limitations: limitations
+        let composed = DiagnosisComposer.compose(
+            findings: findings,
+            securityInspection: securityInspection,
+            permissionLimited: permissionLimited
         )
-
-        let inspectionStatus: InspectionStatus = permissionLimited ? .permissionLimited : securityUnavailable ? .securityUnavailable : .complete
-        let launchStatus: LaunchStatus = hasBlocker ? .blocked : completeSecurityInspection ? .clean : .inconclusive
         return DiagnosticReport(
             target: target,
-            inspectionStatus: inspectionStatus,
-            launchStatus: launchStatus,
+            inspectionStatus: composed.inspectionStatus,
+            launchStatus: composed.launchStatus,
             bundle: bundle,
             findings: findings,
-            diagnosis: diagnosis,
+            diagnosis: composed.diagnosis,
             evidence: evidence
         )
+    }
+
+    private func inspectContainer(at containerURL: URL, target: TargetInspection, kind: ArtifactKind) -> DiagnosticReport {
+        let unpacked = containerInspector.unpack(path: containerURL.path, kind: kind)
+        defer { unpacked.cleanup() }
+
+        var containerFindings = unpacked.findings
+        var containerEvidence = unpacked.evidence
+        let containerQuarantine = QuarantineInspector().inspect(path: containerURL.path)
+        if containerQuarantine.0.present {
+            let alreadyPresent = containerFindings.contains { $0.id == "quarantine.present" }
+            if !alreadyPresent {
+                let finding = Finding(
+                    id: "container.quarantine",
+                    status: .warning,
+                    severity: .warning,
+                    confidence: .confirmed,
+                    title: "Download container is quarantined",
+                    explanation: "The disk image or installer package carries com.apple.quarantine. That is a trigger for Gatekeeper assessment of the nested application, not by itself the defect.",
+                    evidenceReferences: ["container.quarantine"]
+                )
+                containerFindings.append(finding)
+                containerEvidence.append(Evidence(
+                    id: "container.quarantine",
+                    kind: .quarantine,
+                    source: containerURL.path,
+                    detail: containerQuarantine.0.rawValue.map { "com.apple.quarantine = \($0)" } ?? "com.apple.quarantine is present on the container."
+                ))
+            }
+        } else {
+            containerEvidence.append(contentsOf: containerQuarantine.1)
+        }
+
+        guard let nestedAppPath = unpacked.nestedAppPath else {
+            let inspectionStatus: InspectionStatus
+            if !unpacked.inspection.available {
+                inspectionStatus = unpacked.findings.contains(where: { $0.status == .unavailable })
+                    ? .securityUnavailable
+                    : .invalidTarget
+            } else {
+                inspectionStatus = .invalidTarget
+            }
+            let composed = DiagnosisComposer.compose(
+                findings: containerFindings,
+                securityInspection: nil,
+                permissionLimited: false,
+                extraLimitations: [containerLimitation(kind: kind)]
+            )
+            return DiagnosticReport(
+                target: target,
+                inspectionStatus: inspectionStatus,
+                launchStatus: .inconclusive,
+                bundle: nil,
+                container: unpacked.inspection,
+                findings: containerFindings,
+                diagnosis: Diagnosis(
+                    classification: inspectionStatus == .securityUnavailable ? .unavailableEvidence : .unavailableEvidence,
+                    primaryFindingID: containerFindings.first?.id,
+                    triggerFindingIDs: composed.diagnosis.triggerFindingIDs,
+                    summary: containerFindings.first?.explanation ?? "The container could not be diagnosed.",
+                    confidence: .confirmed,
+                    limitations: composed.diagnosis.limitations
+                ),
+                evidence: containerEvidence
+            )
+        }
+
+        let nestedReport = inspect(pathString: nestedAppPath)
+        return mergeContainer(
+            originalTarget: target,
+            container: unpacked.inspection,
+            containerFindings: containerFindings,
+            containerEvidence: containerEvidence,
+            nested: nestedReport,
+            kind: kind
+        )
+    }
+
+    private func mergeContainer(
+        originalTarget: TargetInspection,
+        container: ContainerInspection,
+        containerFindings: [Finding],
+        containerEvidence: [Evidence],
+        nested: DiagnosticReport,
+        kind: ArtifactKind
+    ) -> DiagnosticReport {
+        var findings = containerFindings
+        var seen = Set(findings.map(\.id))
+        for finding in nested.findings where !seen.contains(finding.id) {
+            findings.append(finding)
+            seen.insert(finding.id)
+        }
+        let evidence = containerEvidence + nested.evidence
+        let composed = DiagnosisComposer.compose(
+            findings: findings,
+            securityInspection: nested.bundle?.security,
+            permissionLimited: nested.inspectionStatus == .permissionLimited,
+            extraLimitations: [containerLimitation(kind: kind)]
+        )
+        let rewrittenTarget = TargetInspection(
+            inputPath: originalTarget.inputPath,
+            resolvedPath: container.nestedApplicationPath ?? originalTarget.resolvedPath,
+            kind: originalTarget.kind,
+            exists: originalTarget.exists,
+            isDirectory: originalTarget.isDirectory,
+            isReadable: originalTarget.isReadable
+        )
+        return DiagnosticReport(
+            target: rewrittenTarget,
+            inspectionStatus: composed.inspectionStatus,
+            launchStatus: composed.launchStatus,
+            bundle: nested.bundle,
+            container: container,
+            findings: findings,
+            diagnosis: composed.diagnosis,
+            evidence: evidence
+        )
+    }
+
+    private func containerLimitation(kind: ArtifactKind) -> String {
+        switch kind {
+        case .diskImage:
+            return "The disk image was mounted read-only in a temporary mount point and was not modified."
+        case .installerPackage:
+            return "The installer package was expanded into a temporary directory and was not modified."
+        default:
+            return "The distribution container was opened read-only and was not modified."
+        }
     }
 }
 

@@ -24,6 +24,7 @@ Generate and inspect parser fixtures:
 ```bash
 sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
 ```
 
 For changes to macOS security behavior, also test disposable copies of real applications with native `codesign`, `spctl`, `xcrun stapler`, and `xattr` commands. Never modify an original installed application.

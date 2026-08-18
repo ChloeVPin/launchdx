@@ -22,6 +22,7 @@
     "inspectionStatus": { "enum": ["complete", "target_missing", "invalid_target", "permission_limited", "security_unavailable"] },
     "launchStatus": { "enum": ["clean", "blocked", "inconclusive"] },
     "bundle": { "$ref": "#/$defs/bundle" },
+    "container": { "$ref": "#/$defs/container" },
     "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
     "diagnosis": { "$ref": "#/$defs/diagnosis" },
     "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
@@ -47,6 +48,18 @@
         "operatingSystem": { "type": "string" },
         "hostArchitecture": { "type": "string" },
         "appleSilicon": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "container": {
+      "type": ["object", "null"],
+      "required": ["kind", "unpackMethod", "available"],
+      "properties": {
+        "kind": { "type": "string" },
+        "unpackMethod": { "type": "string" },
+        "nestedApplicationPath": { "type": ["string", "null"] },
+        "available": { "type": "boolean" },
+        "detail": { "type": ["string", "null"] }
       },
       "additionalProperties": false
     },

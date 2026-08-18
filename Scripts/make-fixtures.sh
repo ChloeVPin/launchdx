@@ -41,4 +41,13 @@ make_app "$output_dir/Valid.app" "Valid" "valid"
 make_app "$output_dir/MissingExecutable.app" "MissingExecutable" "missing"
 make_app "$output_dir/BrokenBundle.app" "Broken" "malformed"
 
+if command -v hdiutil >/dev/null 2>&1; then
+  src_dir="$output_dir/dmg-src"
+  rm -rf "$src_dir"
+  mkdir -p "$src_dir"
+  cp -R "$output_dir/Valid.app" "$src_dir/Valid.app"
+  rm -f "$output_dir/Valid.dmg"
+  hdiutil create -volname LaunchDXFixture -srcfolder "$src_dir" -ov -format UDZO "$output_dir/Valid.dmg" >/dev/null
+fi
+
 printf 'Fixtures written to %s\n' "$output_dir"

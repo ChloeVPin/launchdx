@@ -11,8 +11,9 @@ Fixtures make parser and diagnosis behavior reproducible without requiring a Dev
 1. `Valid.app` with a valid property list and minimal arm64 Mach O header
 2. `MissingExecutable.app` with `CFBundleExecutable` pointing to a missing file
 3. `BrokenBundle.app` with malformed `Info.plist`
+4. `Valid.dmg` wrapping `Valid.app` when `hdiutil` is available
 
-The generated `Valid.app` is a parser fixture. It is not a complete runnable application, it is not signed, and it must not be described as a valid production application.
+The generated `Valid.app` is a parser fixture. It is not a complete runnable application, it is not signed, and it must not be described as a valid production application. `Valid.dmg` exists so container unpack can be tested without a Developer ID.
 
 ## Unit fixture classes
 

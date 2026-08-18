@@ -40,3 +40,27 @@ jobs:
           assert report['launchStatus'] == 'blocked'
           assert any(item['id'] in ('signature.unsigned', 'signature.invalid') for item in report['findings'])
           PY
+      - name: Diagnose disk image fixture (expected unsigned blocker)
+        shell: bash
+        run: |
+          if [ ! -f /tmp/launchdx-fixtures/Valid.dmg ]; then
+            echo "Valid.dmg was not generated"
+            exit 1
+          fi
+          set +e
+          .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json > /tmp/launchdx-valid-dmg.json
+          status=$?
+          set -e
+          test "$status" -eq 1
+          python3 - <<'PY'
+          import json
+          with open('/tmp/launchdx-valid-dmg.json') as handle:
+              report = json.load(handle)
+          assert report['target']['kind'] == 'disk_image'
+          assert report['container']['available'] is True
+          assert report['container']['nestedApplicationPath']
+          assert report['launchStatus'] == 'blocked'
+          ids = [item['id'] for item in report['findings']]
+          assert 'container.app-found' in ids
+          assert any(item in ('signature.unsigned', 'signature.invalid') for item in ids)
+          PY

@@ -80,6 +80,13 @@ rm -rf "$OUTPUT_DIR/NestedUnsigned.app/Contents/Helpers/UnsignedHelper.app/Conte
 
 xattr -w com.apple.quarantine '0083;00000000;launchdx.integration;00000000-0000-0000-0000-000000000001' "$OUTPUT_DIR/Modified.app"
 
+if command -v hdiutil >/dev/null 2>&1; then
+  mkdir -p "$OUTPUT_DIR/dmg-src"
+  cp -R "$OUTPUT_DIR/AdHoc.app" "$OUTPUT_DIR/dmg-src/AdHoc.app"
+  rm -f "$OUTPUT_DIR/AdHoc.dmg"
+  hdiutil create -volname LaunchDXAdHoc -srcfolder "$OUTPUT_DIR/dmg-src" -ov -format UDZO "$OUTPUT_DIR/AdHoc.dmg" >/dev/null
+fi
+
 codesign --verify --strict --verbose=2 "$OUTPUT_DIR/AdHoc.app" >/dev/null
 if codesign --verify --strict --verbose=2 "$OUTPUT_DIR/Modified.app" >/dev/null 2>&1; then
   echo "native modified signature unexpectedly passed" >&2
@@ -97,12 +104,20 @@ adhoc_status=$(run_report "$OUTPUT_DIR/AdHoc.app" "$adhoc_json")
 modified_status=$(run_report "$OUTPUT_DIR/Modified.app" "$modified_json")
 nested_status=$(run_report "$OUTPUT_DIR/NestedUnsigned.app" "$nested_json")
 
-python3 - "$adhoc_json" "$modified_json" "$nested_json" "$adhoc_status" "$modified_status" "$nested_status" <<'PY'
+dmg_json=""
+dmg_status="skip"
+if [[ -f "$OUTPUT_DIR/AdHoc.dmg" ]]; then
+  dmg_json="$OUTPUT_DIR/AdHoc.dmg.json"
+  dmg_status=$(run_report "$OUTPUT_DIR/AdHoc.dmg" "$dmg_json")
+fi
+
+python3 - "$adhoc_json" "$modified_json" "$nested_json" "$adhoc_status" "$modified_status" "$nested_status" "$dmg_json" "$dmg_status" <<'PY'
 import json
 import sys
 
 adhoc, modified, nested = [json.load(open(path)) for path in sys.argv[1:4]]
 statuses = [int(value) for value in sys.argv[4:7]]
+dmg_path, dmg_status = sys.argv[7], sys.argv[8]
 assert statuses[0] in (0, 1), statuses
 assert statuses[1] == 1, statuses
 assert statuses[2] == 1, statuses
@@ -114,6 +129,13 @@ assert any(item["id"] in ("signature.nested-unsigned", "signature.nested-invalid
 adhoc_finding = next(item for item in adhoc["findings"] if item["id"] == "signature.ad-hoc")
 assert adhoc_finding["status"] == "warning"
 assert adhoc_finding["severity"] == "warning"
+if dmg_status != "skip":
+    dmg = json.load(open(dmg_path))
+    assert dmg["target"]["kind"] == "disk_image"
+    assert dmg["container"]["available"] is True
+    assert any(item["id"] == "container.app-found" for item in dmg["findings"])
+    assert any(item["id"] == "signature.ad-hoc" for item in dmg["findings"])
+    print("dmg", dmg["inspectionStatus"], dmg["launchStatus"], [item["id"] for item in dmg["findings"]])
 print("real macOS integration assertions passed")
 for label, report in (("adhoc", adhoc), ("modified", modified), ("nested", nested)):
     print(label, report["inspectionStatus"], report["launchStatus"], [item["id"] for item in report["findings"]])

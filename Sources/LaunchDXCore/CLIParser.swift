@@ -87,7 +87,7 @@ public struct CLIParser {
 
     public static let usage = """
     Usage:
-      launchdx diagnose <MyApp.app> [--json] [--verbose] [--no-color]
-      launchdx evidence <MyApp.app> [--json] [--verbose] [--no-color]
+      launchdx diagnose <MyApp.app|MyApp.dmg|MyApp.pkg> [--json] [--verbose] [--no-color]
+      launchdx evidence <MyApp.app|MyApp.dmg|MyApp.pkg> [--json] [--verbose] [--no-color]
     """
 }
