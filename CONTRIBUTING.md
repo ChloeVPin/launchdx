@@ -1,17 +1,15 @@
 # Contributing
 
-## Development requirements
+## What you need
 
 1. macOS 13 or newer
 2. Apple Silicon recommended
 3. Swift 5.9 or newer
-4. Apple command line tools for macOS integration tests
+4. Xcode Command Line Tools, for tests that call Apple’s signing tools
 
-Linux builds may be useful for portable parser work, but they cannot provide Apple signing, Gatekeeper, notarization, or quarantine evidence.
+You can compile parser tests on Linux. Those builds cannot collect real signing, Gatekeeper, notarization, or quarantine evidence.
 
-## Before opening a pull request
-
-Run:
+## Before a pull request
 
 ```bash
 swift test
@@ -20,30 +18,31 @@ python3 -m json.tool Schemas/diagnosis-v1.json >/dev/null
 sh Scripts/test-action.sh
 ```
 
-Generate and inspect parser fixtures:
+Generated fixtures (unsigned on purpose):
 
 ```bash
 sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.pkg --json
 ```
 
-For changes to macOS security behavior, also test disposable copies of real applications with native `codesign`, `spctl`, `xcrun stapler`, and `xattr` commands. Never modify an original installed application.
+If you change how macOS security evidence is collected, also run Apple’s own tools on *copies* of real apps: `codesign`, `spctl`, `xcrun stapler`, and `xattr`. Do not modify an installed original.
 
-## Test design
+## Tests
 
-Prefer normalized evidence and deterministic fake command runners for unit tests. Add real artifact tests only when the fixture can be generated safely and the expected result is stable on supported macOS versions.
+Prefer stable fixtures and fake command runners. Add a real-app test only when the fixture is safe to generate and the result is stable on supported macOS versions.
 
-Tests must distinguish:
+Keep these apart in reports and assertions:
 
 1. Confirmed facts
 2. Inferences
 3. Warnings
-4. Unavailable evidence
+4. Evidence that could not be collected
 5. Inconclusive evidence
 
-Do not turn command failure, timeout, or missing permissions into a confirmed security defect.
+A missing tool, a timeout, or a permission error is not proof the app is malicious or unsigned.
 
-## Documentation style
+## Docs
 
-Use GitHub Flavored Markdown. Keep prose direct. Do not use emoji characters or em dash characters. State version dependent behavior and unsupported cases explicitly.
+GitHub Flavored Markdown. Direct sentences. No emoji. No em dash. Say when behavior depends on the macOS version, and say what this release does not cover.

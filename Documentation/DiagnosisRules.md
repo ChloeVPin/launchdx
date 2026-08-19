@@ -1,6 +1,8 @@
 # Diagnosis rules
 
-The rule engine is intentionally separate from evidence collection. Checkers produce normalized facts; rules decide severity, causality, and repair guidance.
+This file is the rule list the diagnosis step follows.
+
+Collectors only record facts (signature valid, quarantine present, and so on). These rules decide how serious a fact is, whether it is the cause or only the trigger, and what repair text to suggest.
 
 ## Initial catalog
 

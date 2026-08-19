@@ -1,11 +1,11 @@
 # JSON output
 
-The report schema is versioned independently from the executable:
+`--json` prints a report whose shape is versioned separately from the `launchdx` version. If we ever break that shape, the schema version changes.
 
-```text
-https://launchdx.dev/schema/diagnosis/v1
-```
+The file that defines the shape is [Schemas/diagnosis-v1.json](../Schemas/diagnosis-v1.json).
 
-The checked-in schema is `Schemas/diagnosis-v1.json`. Swift's `JSONEncoder` uses the model's stable property names and sorted keys for deterministic output.
+The `$id` inside that file (`https://launchdx.dev/schema/diagnosis/v1`) is a namespace name for the schema. It is not a website you have to visit.
 
-Breaking changes require a new schema version. Raw tool output must be added as evidence later rather than replacing normalized fields.
+Field names and key order are stable. Prefer finding IDs such as `signature.invalid` over the English sentences, which can change.
+
+New raw Apple tool text should be attached as evidence. It should not replace the normalized fields.

@@ -1,30 +1,26 @@
 # Security Policy
 
-## Scope
+launchdx only inspects files. It must never remove quarantine, change Gatekeeper, edit privacy databases, disable system protections, install certificates, re-sign apps, or upload what you point it at.
 
-`launchdx` is a read-only diagnostic tool for application bundles and their download containers (`.dmg`, `.pkg`) on modern Apple Silicon macOS systems.
+## Report a vulnerability
 
-The tool must not remove quarantine, change Gatekeeper policy, modify TCC databases, disable system protections, install certificates, re-sign applications, or upload inspected artifacts.
+Do not file a public issue for an undisclosed vulnerability.
 
-## Reporting a vulnerability
+Use GitHub’s private security advisory on this repository. Include:
 
-Please do not disclose an undisclosed vulnerability in a public issue.
-
-Open a private security report through the repository security advisory workflow when it is available. Include:
-
-1. A concise description of the issue
+1. A short description
 2. The affected version or commit
-3. Reproduction steps that do not require private data
-4. The expected behavior
-5. The observed behavior
-6. Any relevant JSON report or sanitized evidence
+3. Steps to reproduce that do not need private data
+4. What you expected
+5. What happened
+6. A JSON report or other evidence, with secrets removed
 
-Remove personal paths, signing identities, certificate details, private source code, and proprietary application data before sharing artifacts.
+Strip personal paths, signing identities, certificate material, private source, and proprietary app data before you attach anything.
 
 ## Safe testing
 
-Use disposable copies of application bundles. Do not test by changing Gatekeeper settings, disabling system protections, removing quarantine from production artifacts, modifying TCC state, or executing unknown applications.
+Work on copies. Do not turn Gatekeeper off, disable system protections, strip quarantine from production files, change TCC, or launch unknown apps in order to test launchdx.
 
-## Limitations
+## Limits
 
-A launchdx report is evidence based and may be incomplete when macOS tools, permissions, policy services, or system APIs are unavailable. A report is not a replacement for testing the final downloaded artifact on a clean Apple Silicon Mac.
+A report is only as complete as the tools and permissions on that Mac. It is not a substitute for trying the real download on a clean Apple Silicon Mac.

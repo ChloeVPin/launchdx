@@ -1,6 +1,6 @@
-# launchdx GitHub Action
+# GitHub Action
 
-Runs the real `launchdx diagnose` CLI on a `.app`, `.dmg`, or `.pkg`. The job fails when launchdx finds a confirmed launch blocker. The artifact is not modified.
+Run launchdx in CI so a macOS job fails when the built `.app`, `.dmg`, or `.pkg` would be blocked. The file is not modified.
 
 ```yaml
 - uses: ChloeVPin/launchdx@v1
@@ -8,9 +8,11 @@ Runs the real `launchdx diagnose` CLI on a `.app`, `.dmg`, or `.pkg`. The job fa
     path: dist/MyApp.dmg
 ```
 
-Requires a `macos-*` runner. When `binary` is empty, the action uses PATH or installs launchdx from Homebrew (`ChloeVPin/launchdx`).
+Use a `macos-*` runner.
 
-A local checkout can run the same action without Homebrew:
+If `binary` is empty, the action uses `launchdx` already on PATH. If it is not installed, the action installs it with Homebrew (`ChloeVPin/launchdx`).
+
+From a checkout of this repo you can skip Homebrew:
 
 ```yaml
 - uses: ./
@@ -19,15 +21,17 @@ A local checkout can run the same action without Homebrew:
     binary: .build/release/launchdx
 ```
 
+`v1` is the Action pin. The CLI version (for example 0.2.2) is the tool release.
+
 ## Inputs
 
 | Name | Required | Default | Meaning |
 | --- | --- | --- | --- |
-| `path` | yes | | Path to a `.app`, `.dmg`, or `.pkg` |
-| `binary` | no | empty | Existing `launchdx` executable. Empty uses PATH or Homebrew |
+| `path` | yes | | Path to an `.app`, `.dmg`, or `.pkg` |
+| `binary` | no | empty | Path to a `launchdx` executable. Empty uses PATH or Homebrew |
 | `json` | no | `true` | Write a JSON report |
-| `report-path` | no | `launchdx-report.json` | Report file |
-| `fail-on-blocker` | no | `true` | Fail the job on launchdx exit code 1 |
+| `report-path` | no | `launchdx-report.json` | Where to write the report |
+| `fail-on-blocker` | no | `true` | Fail the job when launchdx exits `1` |
 | `fail-on-error` | no | `true` | Fail the job on usage or tool errors |
 
 ## Outputs

@@ -12,8 +12,9 @@ Fixtures make parser and diagnosis behavior reproducible without requiring a Dev
 2. `MissingExecutable.app` with `CFBundleExecutable` pointing to a missing file
 3. `BrokenBundle.app` with malformed `Info.plist`
 4. `Valid.dmg` wrapping `Valid.app` when `hdiutil` is available
+5. `Valid.pkg` wrapping `Valid.app` when `pkgbuild` is available
 
-The generated `Valid.app` is a parser fixture. It is not a complete runnable application, it is not signed, and it must not be described as a valid production application. `Valid.dmg` exists so container unpack can be tested without a Developer ID.
+The generated `Valid.app` is a parser fixture. It is not a complete runnable application, it is not signed, and it must not be described as a valid production application. `Valid.dmg` and `Valid.pkg` exist so container unpack can be tested without a Developer ID.
 
 ## Unit fixture classes
 

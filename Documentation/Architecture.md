@@ -1,5 +1,9 @@
 # Architecture
 
+This file is for people changing the code. It describes how launchdx is put together.
+
+The short version: the tool first collects facts, then decides what those facts mean, then prints a report. Those three steps stay separate so a wording change cannot silently change a diagnosis.
+
 ## Design goals
 
 launchdx separates evidence collection from diagnosis and presentation.
