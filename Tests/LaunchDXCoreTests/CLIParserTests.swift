@@ -43,4 +43,37 @@ final class CLIParserTests: XCTestCase {
             XCTAssertEqual(error as? CLIParseError, .unknownOption("--wat"))
         }
     }
+
+    func testVersionFlag() {
+        XCTAssertThrowsError(try parser.parse(["--version"])) { error in
+            XCTAssertEqual(error as? CLIParseError, .version)
+        }
+        XCTAssertThrowsError(try parser.parse(["-V"])) { error in
+            XCTAssertEqual(error as? CLIParseError, .version)
+        }
+    }
+
+    func testHelpFlag() {
+        XCTAssertThrowsError(try parser.parse(["--help"])) { error in
+            XCTAssertEqual(error as? CLIParseError, .help)
+        }
+        XCTAssertThrowsError(try parser.parse(["diagnose", "--help"])) { error in
+            XCTAssertEqual(error as? CLIParseError, .help)
+        }
+    }
+
+    func testMultiplePathsFail() {
+        XCTAssertThrowsError(try parser.parse(["diagnose", "A.app", "B.app"])) { error in
+            XCTAssertEqual(error as? CLIParseError, .multiplePaths)
+        }
+    }
+
+    func testDiskImageAndPackagePathsParse() throws {
+        let dmg = try parser.parse(["diagnose", "MyApp.dmg", "--json"])
+        XCTAssertEqual(dmg.path, "MyApp.dmg")
+        XCTAssertTrue(dmg.json)
+        let pkg = try parser.parse(["evidence", "MyApp.pkg"])
+        XCTAssertEqual(pkg.command, .evidence)
+        XCTAssertEqual(pkg.path, "MyApp.pkg")
+    }
 }

@@ -8,31 +8,23 @@ _launchdx_complete() {
     words=("diagnose" "evidence")
 
     if [[ ${COMP_CWORD} -eq 1 ]]; then
-        COMPREPLY=($(compgen -W "${words[*]} --help -h" -- "${cur}"))
+        COMPREPLY=($(compgen -W "${words[*]} --help -h --version -V" -- "${cur}"))
+        return 0
+    fi
+
+    if [[ "${cur}" == -* ]]; then
+        COMPREPLY=($(compgen -W "--json --verbose --no-color --help -h --version -V" -- "${cur}"))
         return 0
     fi
 
     case "${prev}" in
-        diagnose | evidence)
-            COMPREPLY=($(compgen -f -- "${cur}"))
-            return 0
-            ;;
-        --json | --verbose | --no-color)
+        diagnose | evidence | --json | --verbose | --no-color)
             COMPREPLY=($(compgen -f -- "${cur}"))
             return 0
             ;;
     esac
 
-    case "${cur}" in
-        -*)
-            COMPREPLY=($(compgen -W "--json --verbose --no-color --help -h" -- "${cur}"))
-            return 0
-            ;;
-        *)
-            COMPREPLY=($(compgen -f -- "${cur}"))
-            return 0
-            ;;
-    esac
+    COMPREPLY=($(compgen -f -- "${cur}"))
 }
 
 complete -F _launchdx_complete launchdx

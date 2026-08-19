@@ -117,6 +117,12 @@ For additional repair guidance:
 .build/release/launchdx diagnose /Applications/Notion.app --verbose
 ```
 
+Print the tool version:
+
+```bash
+launchdx --version
+```
+
 ## Example output
 
 ```text
@@ -189,11 +195,12 @@ The schema is versioned independently from terminal wording. Consumers should us
 1. Code `0`: inspection completed without a confirmed blocker
 2. Code `1`: a confirmed blocker was found
 3. Code `64`: command usage error
-4. Code `65`: target type is outside the supported `.app`, `.dmg`, and `.pkg` scope
+4. Code `65`: target is not a usable `.app`, `.dmg`, or `.pkg` (wrong type, empty container, or the image/package could not be opened)
 5. Code `66`: target path does not exist
 6. Code `69`: required security evidence is unavailable
 7. Code `70`: internal tool error
 8. Code `77`: inspection is limited by permissions
+9. Code `78`: GitHub Action host is not macOS (the CLI itself does not emit this)
 
 A clean result can still contain warnings. A nonzero result does not mean that every possible launch gate was inspected.
 
@@ -235,6 +242,7 @@ swift package clean
 swift test
 swift build -c release
 python3 -m json.tool Schemas/diagnosis-v1.json >/dev/null
+sh Scripts/test-action.sh
 ```
 
 Generate disposable parser fixtures:
@@ -244,6 +252,7 @@ rm -rf /tmp/launchdx-fixtures
 sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.pkg --json
 ```
 
 The generated `Valid.app` is intentionally not a runnable application. It contains a minimal arm64 Mach O header and no valid signing identity.

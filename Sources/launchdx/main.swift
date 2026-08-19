@@ -13,6 +13,9 @@ let parser = CLIParser()
 } catch CLIParseError.help {
     FileHandle.standardOutput.write(Data((CLIParser.usage + "\n").utf8))
     exit(LaunchDXExitCode.ok.rawValue)
+} catch CLIParseError.version {
+    FileHandle.standardOutput.write(Data("launchdx \(LaunchDXVersion.current)\n".utf8))
+    exit(LaunchDXExitCode.ok.rawValue)
 } catch let error as CLIParseError {
     let message = "launchdx: \(error.description)\n\n\(CLIParser.usage)\n"
     FileHandle.standardError.write(Data(message.utf8))

@@ -64,6 +64,30 @@ jobs:
           assert 'container.app-found' in ids
           assert any(item in ('signature.unsigned', 'signature.invalid') for item in ids)
           PY
+      - name: Diagnose installer package fixture (expected unsigned blocker)
+        shell: bash
+        run: |
+          if [ ! -f /tmp/launchdx-fixtures/Valid.pkg ]; then
+            echo "Valid.pkg was not generated"
+            exit 1
+          fi
+          set +e
+          .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.pkg --json > /tmp/launchdx-valid-pkg.json
+          status=$?
+          set -e
+          test "$status" -eq 1
+          python3 - <<'PY'
+          import json
+          with open('/tmp/launchdx-valid-pkg.json') as handle:
+              report = json.load(handle)
+          assert report['target']['kind'] == 'installer_package'
+          assert report['container']['available'] is True
+          assert report['container']['nestedApplicationPath']
+          assert report['launchStatus'] == 'blocked'
+          ids = [item['id'] for item in report['findings']]
+          assert 'container.app-found' in ids
+          assert any(item in ('signature.unsigned', 'signature.invalid') for item in ids)
+          PY
       - name: Action wrapper tests
         run: sh Scripts/test-action.sh
       - name: Action on unsigned fixture (expect blocker)

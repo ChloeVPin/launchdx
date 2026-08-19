@@ -1,3 +1,16 @@
+# launchdx 0.2.2
+
+Read-only diagnosis of `.app`, `.dmg`, and `.pkg` on Apple Silicon macOS.
+
+## 0.2.2
+
+1. `launchdx --version`
+2. Installer-package fixture coverage
+3. GitHub Action lives in this repository: `uses: ChloeVPin/launchdx@v1`
+4. Homebrew tap tracks this tag
+
+---
+
 # launchdx 0.2.0
 
 ## Find out why macOS rejected an application

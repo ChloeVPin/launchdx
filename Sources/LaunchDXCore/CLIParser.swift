@@ -7,6 +7,7 @@ public enum CLIParseError: Error, Equatable, CustomStringConvertible {
     case multiplePaths
     case unknownOption(String)
     case help
+    case version
 
     public var description: String {
         switch self {
@@ -22,6 +23,8 @@ public enum CLIParseError: Error, Equatable, CustomStringConvertible {
             return "unknown option: \(option)"
         case .help:
             return "help requested"
+        case .version:
+            return "version requested"
         }
     }
 }
@@ -35,6 +38,9 @@ public struct CLIParser {
         }
         if commandName == "--help" || commandName == "-h" {
             throw CLIParseError.help
+        }
+        if commandName == "--version" || commandName == "-V" {
+            throw CLIParseError.version
         }
 
         let command: CLICommand
@@ -62,6 +68,8 @@ public struct CLIParser {
                 noColor = true
             case "--help", "-h":
                 throw CLIParseError.help
+            case "--version", "-V":
+                throw CLIParseError.version
             case let option where option.hasPrefix("-"):
                 throw CLIParseError.unknownOption(option)
             default:
@@ -89,5 +97,6 @@ public struct CLIParser {
     Usage:
       launchdx diagnose <MyApp.app|MyApp.dmg|MyApp.pkg> [--json] [--verbose] [--no-color]
       launchdx evidence <MyApp.app|MyApp.dmg|MyApp.pkg> [--json] [--verbose] [--no-color]
+      launchdx --version
     """
 }

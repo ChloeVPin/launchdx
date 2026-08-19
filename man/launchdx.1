@@ -1,4 +1,4 @@
-.TH LAUNCHDX 1 "August 17, 2026" "launchdx 0.2.0" "User Commands"
+.TH LAUNCHDX 1 "August 18, 2026" "launchdx 0.2.2" "User Commands"
 .SH NAME
 launchdx \- find out exactly why macOS blocked your app
 .SH SYNOPSIS
@@ -40,6 +40,9 @@ Disable colored output.
 .TP
 .B \-h, \-\-help
 Show usage information.
+.TP
+.B \-\-version, \-V
+Print the launchdx version and exit.
 .SH EXIT STATUS
 .TP
 .B 0
@@ -67,7 +70,8 @@ Internal tool error.
 Inspection is limited by permissions.
 .TP
 .B 78
-Configuration error.
+Host is not a supported macOS environment. The GitHub Action uses this
+when it would otherwise try to install launchdx on a non-macOS runner.
 .SH EXAMPLES
 Diagnose an application:
 .PP

@@ -2,7 +2,7 @@
 
 ## Repository quality
 
-1. Confirm the version in `Package.swift` and release metadata.
+1. Confirm the version in `Sources/LaunchDXCore/Version.swift`, `man/launchdx.1`, and the Homebrew formula.
 2. Update `CHANGELOG.md`.
 3. Confirm `LICENSE`, `SECURITY.md`, and `CONTRIBUTING.md`.
 4. Validate Markdown for broken links and unsupported characters.
@@ -26,6 +26,7 @@ sh Scripts/make-fixtures.sh /tmp/launchdx-fixtures
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/MissingExecutable.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/BrokenBundle.app --json
 .build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.dmg --json
+.build/release/launchdx diagnose /tmp/launchdx-fixtures/Valid.pkg --json
 ```
 
 Expected fixture behavior:
@@ -34,6 +35,7 @@ Expected fixture behavior:
 2. `MissingExecutable.app`: blocked by bundle structure, exit code `1`
 3. `BrokenBundle.app`: blocked by invalid `Info.plist`, exit code `1`
 4. `Valid.dmg`: same unsigned blocker after a read-only mount, exit code `1`
+5. `Valid.pkg`: same unsigned blocker after a read-only expand, exit code `1`
 
 ## Real macOS artifact validation
 

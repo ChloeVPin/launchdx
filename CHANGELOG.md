@@ -2,11 +2,18 @@
 
 All notable changes to launchdx are documented here.
 
-## Unreleased
+## 0.2.2
+
+### Added
+
+1. `launchdx --version` and `-V`
+2. Generated `.pkg` fixture plus diagnosis-path, CI, and integration coverage for installer packages
 
 ### Changed
 
-1. The GitHub Action lives only in this repository. Use `ChloeVPin/launchdx@v1`.
+1. The GitHub Action lives only in this repository. Use `ChloeVPin/launchdx@v1`
+2. Homebrew tap, man page, and CLI version are aligned at 0.2.2
+3. Bash completion offers flags after `diagnose` / `evidence`
 
 ## 0.2.1
 

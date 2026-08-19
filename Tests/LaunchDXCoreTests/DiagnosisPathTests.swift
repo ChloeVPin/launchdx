@@ -140,6 +140,43 @@ final class DiagnosisPathTests: XCTestCase {
         #endif
     }
 
+    func testInstallerPackageReusesAppDiagnosis() throws {
+        #if os(macOS)
+        guard FileManager.default.isExecutableFile(atPath: "/usr/bin/pkgbuild") else {
+            throw XCTSkip("pkgbuild is not available")
+        }
+        let app = try makeApp(name: "Packaged.app", executable: "Packaged")
+        let pkg = try makeInstallerPackage(containing: app, name: "Packaged.pkg")
+        let report = DiagnosticPipeline().diagnose(path: pkg.path)
+
+        XCTAssertEqual(report.target.kind, .installerPackage)
+        XCTAssertEqual(report.target.inputPath, pkg.path)
+        XCTAssertNotNil(report.container)
+        XCTAssertEqual(report.container?.kind, .installerPackage)
+        XCTAssertEqual(report.container?.available, true)
+        XCTAssertTrue(report.findings.contains { $0.id == "container.expanded" })
+        XCTAssertTrue(report.findings.contains { $0.id == "container.app-found" })
+        XCTAssertTrue(report.container?.nestedApplicationPath?.hasSuffix("Packaged.app") == true)
+        XCTAssertEqual(report.bundle?.bundleIdentifier, "dev.launchdx.packaged")
+        XCTAssertEqual(report.launchStatus, .blocked)
+        XCTAssertEqual(report.exitCode, .blocked)
+        let ids = report.findings.map(\.id)
+        XCTAssertTrue(
+            ids.contains("signature.unsigned") || ids.contains("signature.invalid"),
+            "package diagnosis must reuse the nested app signature result, got \(ids)"
+        )
+        #else
+        throw XCTSkip("installer package fixtures require macOS")
+        #endif
+    }
+
+    func testTrailingSlashAppPathIsStillAnApplicationBundle() throws {
+        let app = try makeApp(name: "Slash.app", executable: "Slash")
+        let report = DiagnosticPipeline().diagnose(path: app.path + "/")
+        XCTAssertEqual(report.target.kind, .applicationBundle)
+        XCTAssertNotEqual(report.findings.first?.id, "target.not-app")
+    }
+
     func testUnsupportedFileStillUsesStableNotAppFinding() throws {
         let root = try makeRoot()
         let file = root.appendingPathComponent("notes.txt")
@@ -176,6 +213,31 @@ final class DiagnosisPathTests: XCTestCase {
             throw XCTSkip("hdiutil create failed: \(message)")
         }
         return dmg
+    }
+
+    private func makeInstallerPackage(containing app: URL, name: String) throws -> URL {
+        let root = try makeRoot()
+        let payload = root.appendingPathComponent("payload", isDirectory: true)
+        try FileManager.default.createDirectory(at: payload, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: app, to: payload.appendingPathComponent(app.lastPathComponent))
+        let pkg = root.appendingPathComponent(name)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pkgbuild")
+        process.arguments = [
+            "--root", payload.path,
+            "--identifier", "dev.launchdx.pkgfixture",
+            "--version", "0.0.1",
+            pkg.path
+        ]
+        let stderr = Pipe()
+        process.standardError = stderr
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0, FileManager.default.fileExists(atPath: pkg.path) else {
+            let message = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            throw XCTSkip("pkgbuild failed: \(message)")
+        }
+        return pkg
     }
     #endif
 

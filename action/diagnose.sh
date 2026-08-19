@@ -20,7 +20,7 @@ write_output() {
 }
 
 if [ -z "$path" ]; then
-  echo "launchdx-action: input 'path' is required" >&2
+  echo "launchdx: input 'path' is required" >&2
   write_output "exit-code" "64"
   write_output "launch-status" ""
   write_output "report-path" ""
@@ -28,7 +28,7 @@ if [ -z "$path" ]; then
 fi
 
 if [ ! -e "$path" ]; then
-  echo "launchdx-action: target does not exist: $path" >&2
+  echo "launchdx: target does not exist: $path" >&2
   write_output "exit-code" "66"
   write_output "launch-status" ""
   write_output "report-path" ""
@@ -41,21 +41,21 @@ fi
 
 if [ -z "$bin" ]; then
   if [ "$allow_install" != "true" ]; then
-    echo "launchdx-action: launchdx is not installed and install is disabled" >&2
+    echo "launchdx: launchdx is not installed and install is disabled" >&2
     write_output "exit-code" "69"
     write_output "launch-status" ""
     write_output "report-path" ""
     exit 69
   fi
   if [ "$(uname -s)" != "Darwin" ]; then
-    echo "launchdx-action: diagnosis requires a macOS runner" >&2
+    echo "launchdx: diagnosis requires a macOS runner" >&2
     write_output "exit-code" "78"
     write_output "launch-status" ""
     write_output "report-path" ""
     exit 78
   fi
   if ! command -v brew >/dev/null 2>&1; then
-    echo "launchdx-action: Homebrew is required to install launchdx" >&2
+    echo "launchdx: Homebrew is required to install launchdx" >&2
     write_output "exit-code" "69"
     write_output "launch-status" ""
     write_output "report-path" ""
@@ -67,7 +67,7 @@ if [ -z "$bin" ]; then
 fi
 
 if [ ! -x "$bin" ]; then
-  echo "launchdx-action: launchdx is not executable: $bin" >&2
+  echo "launchdx: launchdx is not executable: $bin" >&2
   write_output "exit-code" "69"
   write_output "launch-status" ""
   write_output "report-path" ""
@@ -100,7 +100,7 @@ write_output "exit-code" "$status"
 write_output "launch-status" "$launch_status"
 write_output "report-path" "$report_path"
 
-echo "launchdx-action: exit $status launch-status=${launch_status:-unknown} report=$report_path"
+echo "launchdx: exit $status launch-status=${launch_status:-unknown} report=$report_path"
 
 if [ "$status" -eq 0 ]; then
   exit 0
@@ -108,17 +108,17 @@ fi
 
 if [ "$status" -eq 1 ]; then
   if [ "$fail_on_blocker" = "true" ]; then
-    echo "launchdx-action: confirmed launch blocker" >&2
+    echo "launchdx: confirmed launch blocker" >&2
     exit 1
   fi
-  echo "launchdx-action: blocker recorded; fail-on-blocker is false"
+  echo "launchdx: blocker recorded; fail-on-blocker is false"
   exit 0
 fi
 
 if [ "$fail_on_error" = "true" ]; then
-  echo "launchdx-action: launchdx failed with exit $status" >&2
+  echo "launchdx: launchdx failed with exit $status" >&2
   exit "$status"
 fi
 
-echo "launchdx-action: non-blocker failure recorded; fail-on-error is false"
+echo "launchdx: non-blocker failure recorded; fail-on-error is false"
 exit 0

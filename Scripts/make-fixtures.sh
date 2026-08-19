@@ -50,4 +50,13 @@ if command -v hdiutil >/dev/null 2>&1; then
   hdiutil create -volname LaunchDXFixture -srcfolder "$src_dir" -ov -format UDZO "$output_dir/Valid.dmg" >/dev/null
 fi
 
+if command -v pkgbuild >/dev/null 2>&1; then
+  pkg_root="$output_dir/pkg-root"
+  rm -rf "$pkg_root"
+  mkdir -p "$pkg_root"
+  cp -R "$output_dir/Valid.app" "$pkg_root/Valid.app"
+  rm -f "$output_dir/Valid.pkg"
+  pkgbuild --root "$pkg_root" --identifier "dev.launchdx.fixture" --version "0.0.1" "$output_dir/Valid.pkg" >/dev/null
+fi
+
 printf 'Fixtures written to %s\n' "$output_dir"

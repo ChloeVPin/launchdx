@@ -761,7 +761,7 @@ public final class BundleInspector {
                 container: unpacked.inspection,
                 findings: containerFindings,
                 diagnosis: Diagnosis(
-                    classification: inspectionStatus == .securityUnavailable ? .unavailableEvidence : .unavailableEvidence,
+                    classification: .unavailableEvidence,
                     primaryFindingID: containerFindings.first?.id,
                     triggerFindingIDs: composed.diagnosis.triggerFindingIDs,
                     summary: containerFindings.first?.explanation ?? "The container could not be diagnosed.",

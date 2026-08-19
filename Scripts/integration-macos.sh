@@ -87,6 +87,13 @@ if command -v hdiutil >/dev/null 2>&1; then
   hdiutil create -volname LaunchDXAdHoc -srcfolder "$OUTPUT_DIR/dmg-src" -ov -format UDZO "$OUTPUT_DIR/AdHoc.dmg" >/dev/null
 fi
 
+if command -v pkgbuild >/dev/null 2>&1; then
+  mkdir -p "$OUTPUT_DIR/pkg-root"
+  cp -R "$OUTPUT_DIR/AdHoc.app" "$OUTPUT_DIR/pkg-root/AdHoc.app"
+  rm -f "$OUTPUT_DIR/AdHoc.pkg"
+  pkgbuild --root "$OUTPUT_DIR/pkg-root" --identifier "dev.launchdx.integration.adhoc" --version "0.0.1" "$OUTPUT_DIR/AdHoc.pkg" >/dev/null
+fi
+
 codesign --verify --strict --verbose=2 "$OUTPUT_DIR/AdHoc.app" >/dev/null
 if codesign --verify --strict --verbose=2 "$OUTPUT_DIR/Modified.app" >/dev/null 2>&1; then
   echo "native modified signature unexpectedly passed" >&2
@@ -111,13 +118,21 @@ if [[ -f "$OUTPUT_DIR/AdHoc.dmg" ]]; then
   dmg_status=$(run_report "$OUTPUT_DIR/AdHoc.dmg" "$dmg_json")
 fi
 
-python3 - "$adhoc_json" "$modified_json" "$nested_json" "$adhoc_status" "$modified_status" "$nested_status" "$dmg_json" "$dmg_status" <<'PY'
+pkg_json=""
+pkg_status="skip"
+if [[ -f "$OUTPUT_DIR/AdHoc.pkg" ]]; then
+  pkg_json="$OUTPUT_DIR/AdHoc.pkg.json"
+  pkg_status=$(run_report "$OUTPUT_DIR/AdHoc.pkg" "$pkg_json")
+fi
+
+python3 - "$adhoc_json" "$modified_json" "$nested_json" "$adhoc_status" "$modified_status" "$nested_status" "$dmg_json" "$dmg_status" "$pkg_json" "$pkg_status" <<'PY'
 import json
 import sys
 
 adhoc, modified, nested = [json.load(open(path)) for path in sys.argv[1:4]]
 statuses = [int(value) for value in sys.argv[4:7]]
 dmg_path, dmg_status = sys.argv[7], sys.argv[8]
+pkg_path, pkg_status = sys.argv[9], sys.argv[10]
 assert statuses[0] in (0, 1), statuses
 assert statuses[1] == 1, statuses
 assert statuses[2] == 1, statuses
@@ -136,6 +151,13 @@ if dmg_status != "skip":
     assert any(item["id"] == "container.app-found" for item in dmg["findings"])
     assert any(item["id"] == "signature.ad-hoc" for item in dmg["findings"])
     print("dmg", dmg["inspectionStatus"], dmg["launchStatus"], [item["id"] for item in dmg["findings"]])
+if pkg_status != "skip":
+    pkg = json.load(open(pkg_path))
+    assert pkg["target"]["kind"] == "installer_package"
+    assert pkg["container"]["available"] is True
+    assert any(item["id"] == "container.app-found" for item in pkg["findings"])
+    assert any(item["id"] == "signature.ad-hoc" for item in pkg["findings"])
+    print("pkg", pkg["inspectionStatus"], pkg["launchStatus"], [item["id"] for item in pkg["findings"]])
 print("real macOS integration assertions passed")
 for label, report in (("adhoc", adhoc), ("modified", modified), ("nested", nested)):
     print(label, report["inspectionStatus"], report["launchStatus"], [item["id"] for item in report["findings"]])

@@ -9,7 +9,16 @@ _launchdx() {
     )
 
     if (( CURRENT == 2 )); then
-        _describe -t commands 'launchdx command' commands
+        local -a toplevel
+        toplevel=(
+            'diagnose:inspect an application, disk image, or installer package and explain the evidence behind a launch blocker'
+            'evidence:show raw evidence for an application, disk image, or installer package'
+            '--version:print the launchdx version'
+            '-V:print the launchdx version'
+            '--help:show help'
+            '-h:show help'
+        )
+        _describe -t commands 'launchdx' toplevel
         return
     fi
 
