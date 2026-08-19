@@ -2,12 +2,18 @@
 
 All notable changes to launchdx are documented here.
 
+## Unreleased
+
+### Changed
+
+1. The GitHub Action lives in this repository. Use `ChloeVPin/launchdx@v1`. The separate `launchdx-action` wrapper is archived; existing `ChloeVPin/launchdx-action@v1` pins still resolve to the tagged action files there.
+
 ## 0.2.1
 
 ### Added
 
 1. GitHub Action that runs `launchdx diagnose` on a `.app`, `.dmg`, or `.pkg` and fails the job on a confirmed blocker
-2. `ChloeVPin/launchdx-action@v1` wrapper for the one-line CI snippet
+2. `ChloeVPin/launchdx-action@v1` wrapper for the one-line CI snippet (now archived; use `ChloeVPin/launchdx@v1`)
 
 ## 0.2.0
 

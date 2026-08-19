@@ -2,20 +2,21 @@
 
 Runs the real `launchdx diagnose` CLI on a `.app`, `.dmg`, or `.pkg`. The job fails when launchdx finds a confirmed launch blocker. The artifact is not modified.
 
-Preferred name:
-
 ```yaml
-- uses: ChloeVPin/launchdx-action@v1
+- uses: ChloeVPin/launchdx@v1
   with:
     path: dist/MyApp.dmg
 ```
 
-This repository also exposes the same action:
+Requires a `macos-*` runner. When `binary` is empty, the action uses PATH or installs launchdx from Homebrew (`ChloeVPin/launchdx`).
+
+A local checkout can run the same action without Homebrew:
 
 ```yaml
-- uses: ChloeVPin/launchdx@v0.2.1
+- uses: ./
   with:
     path: dist/MyApp.dmg
+    binary: .build/release/launchdx
 ```
 
 ## Inputs
@@ -37,4 +38,6 @@ This repository also exposes the same action:
 | `launch-status` | `clean`, `blocked`, or `inconclusive` when the report is JSON |
 | `report-path` | Path to the written report |
 
-Requires a `macos-*` runner.
+## License
+
+MIT. Same terms as launchdx.

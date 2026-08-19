@@ -54,20 +54,20 @@ The default behavior is read only.
 Add this to a macOS GitHub Actions job that already built a `.app`, `.dmg`, or `.pkg`. The job fails when launchdx finds a confirmed launch blocker.
 
 ```yaml
-- uses: ChloeVPin/launchdx-action@v1
+- uses: ChloeVPin/launchdx@v1
   with:
     path: dist/MyApp.dmg
 ```
 
-The same action lives in this repository, so a local checkout can run `uses: ./` and pass `binary` to skip the Homebrew install:
-
-```yaml
-- uses: ChloeVPin/launchdx@v0.2.1
-  with:
-    path: dist/MyApp.dmg
-```
+Requires a `macos-*` runner. When `binary` is empty, the action uses PATH or installs launchdx from Homebrew (`ChloeVPin/launchdx`). A local checkout can run `uses: ./` and pass `binary` to skip the install.
 
 The action calls the real `launchdx diagnose` CLI. It does not modify the artifact.
+
+Inputs: `path` (required), `binary`, `json` (default `true`), `report-path` (default `launchdx-report.json`), `fail-on-blocker` (default `true`), `fail-on-error` (default `true`).
+
+Outputs: `exit-code`, `launch-status` (`clean`, `blocked`, or `inconclusive` when the report is JSON), `report-path`.
+
+Full action notes are in [action/README.md](action/README.md).
 
 ## Quick start
 
